@@ -41,7 +41,7 @@ The app is fully optimized for mobile devices and supports installing as a Progr
 
 1.  **Clone & Install Dependencies:**
     ```bash
-    git clone https://github.com/your-username/BulkEmailSender.git
+    git clone https://github.com/iamrohitpal/BulkEmailSender.git
     cd BulkEmailSender
     composer install
     npm install
