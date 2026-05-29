@@ -1,0 +1,26 @@
+{
+  "name": "JobApply SaaS",
+  "short_name": "JobApply",
+  "description": "Bulk job application email sender — send personalized emails to companies at scale.",
+  "start_url": "/MyProject/public/dashboard",
+  "scope": "/MyProject/public/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/MyProject/public/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/MyProject/public/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
