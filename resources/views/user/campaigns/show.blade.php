@@ -22,6 +22,16 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
                             Sending...
                         </span>
+                    @elseif($campaign->status === 'paused')
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                            Paused
+                        </span>
+                    @elseif($campaign->status === 'stopped')
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                            Stopped
+                        </span>
                     @elseif($campaign->status === 'completed')
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Completed</span>
                     @else
@@ -41,10 +51,58 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-3 shrink-0">
-            @if($campaign->status !== 'processing')
+        <div class="flex items-center gap-3 shrink-0 flex-wrap">
+            @if($campaign->status === 'processing')
+                {{-- PAUSE button --}}
+                <form action="{{ route('user.campaigns.pause', $campaign->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        onclick="return confirm('Pause sending? Emails already dispatched will still deliver.')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 text-sm font-semibold rounded-xl transition-all">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                        Pause
+                    </button>
+                </form>
+                {{-- STOP button --}}
+                <form action="{{ route('user.campaigns.stop', $campaign->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        onclick="return confirm('Stop campaign? All pending emails will be cancelled and cannot be resumed.')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-sm font-semibold rounded-xl transition-all">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                        Stop Campaign
+                    </button>
+                </form>
+                {{-- Sending indicator --}}
+                <button disabled class="px-5 py-2 bg-slate-100 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl flex items-center gap-2 cursor-not-allowed">
+                    <svg class="animate-spin h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending in Progress...
+                </button>
+            @elseif($campaign->status === 'paused')
+                {{-- Resume = send again from paused --}}
+                <form action="{{ route('user.campaigns.send', $campaign->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/10">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                        Resume Campaign
+                    </button>
+                </form>
+                {{-- STOP button --}}
+                <form action="{{ route('user.campaigns.stop', $campaign->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        onclick="return confirm('Stop campaign? All pending emails will be cancelled.')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-sm font-semibold rounded-xl transition-all">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                        Stop Campaign
+                    </button>
+                </form>
+            @else
                 <a href="{{ route('user.campaigns.edit', $campaign->id) }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 transition-colors">
-                    Edit Settings & Template
+                    Edit Settings &amp; Template
                 </a>
                 <form action="{{ route('user.campaigns.send', $campaign->id) }}" method="POST" class="inline">
                     @csrf
@@ -56,17 +114,10 @@
                         @endif
                     </button>
                 </form>
-            @else
-                <button disabled class="px-5 py-2 bg-slate-100 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl flex items-center gap-2 cursor-not-allowed">
-                    <svg class="animate-spin h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sending in Progress...
-                </button>
             @endif
         </div>
     </div>
+
 
     <!-- Stats & Progress Card -->
     @php
@@ -123,8 +174,32 @@
     <!-- Recipient Logs list -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-slate-900">Application Delivery Logs</h3>
+        <div>
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 flex-wrap">
+                    Application Delivery Logs
+                    @php
+                        $logSentCount    = $campaign->emailLogs()->where('status', 'sent')->count();
+                        $logFailedCount  = $campaign->emailLogs()->where('status', 'failed')->count();
+                        $logPendingCount = $campaign->emailLogs()->where('status', 'pending')->count();
+                    @endphp
+                    @if($logSentCount > 0)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            {{ $logSentCount }} Delivered
+                        </span>
+                    @endif
+                    @if($logFailedCount > 0)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                            {{ $logFailedCount }} Failed
+                        </span>
+                    @endif
+                    @if($logPendingCount > 0)
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                            {{ $logPendingCount }} Pending
+                        </span>
+                    @endif
+                </h3>
                 <p class="text-xs text-slate-400 mt-0.5">Real-time status of each contact in the campaign</p>
             </div>
             
@@ -246,14 +321,10 @@
                         const failedCountEl = document.getElementById('campaign-failed-count');
                         if (failedCountEl) failedCountEl.textContent = data.failed_emails;
                         
-                        // If campaign status changed from processing
+                        // Reload when status changes from 'processing' (completed, paused, stopped, failed)
                         if (data.status !== 'processing') {
                             clearInterval(pollInterval);
-                            
-                            // Reload layout after completion to activate buttons
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
+                            setTimeout(() => { window.location.reload(); }, 1000);
                         }
                     })
                     .catch(err => {

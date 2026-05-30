@@ -61,6 +61,8 @@ Route::middleware(['auth:web', 'user.active'])->group(function () {
         'destroy' => 'user.campaigns.destroy',
     ]);
     Route::post('/campaigns/{campaign}/send', [UserCampaignController::class, 'send'])->name('user.campaigns.send');
+    Route::post('/campaigns/{campaign}/pause', [UserCampaignController::class, 'pause'])->name('user.campaigns.pause');
+    Route::post('/campaigns/{campaign}/stop', [UserCampaignController::class, 'stop'])->name('user.campaigns.stop');
     Route::get('/campaigns/{campaign}/progress', [UserCampaignController::class, 'getProgress'])->name('user.campaigns.progress');
 });
 

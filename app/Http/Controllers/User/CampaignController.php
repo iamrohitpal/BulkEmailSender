@@ -386,7 +386,7 @@ class CampaignController extends Controller
     }
 
     /**
-     * Dispatch the campaign.
+     * Dispatch the campaign (smart retry — preserves already-sent emails when retrying failures).
      */
     public function send(Campaign $campaign)
     {
@@ -401,23 +401,95 @@ class CampaignController extends Controller
             return redirect()->back()->with('error', 'Cannot send campaign. Please configure an active SMTP profile first.');
         }
 
-        // Reset stats
-        $campaign->update([
-            'status' => 'processing',
-            'sent_emails' => 0,
-            'failed_emails' => 0,
-        ]);
+        // Count how many logs are retryable (failed or pending)
+        $retryableCount = $campaign->emailLogs()
+            ->whereIn('status', ['failed', 'pending'])
+            ->count();
 
-        $campaign->emailLogs()->update([
-            'status' => 'pending',
-            'error_message' => null,
-            'sent_at' => null,
-        ]);
+        if ($retryableCount > 0) {
+            // Partial retry: preserve already-sent emails, only re-queue failures
+            $alreadySent = $campaign->emailLogs()->where('status', 'sent')->count();
+
+            $campaign->emailLogs()
+                ->whereIn('status', ['failed', 'pending'])
+                ->update([
+                    'status'        => 'pending',
+                    'error_message' => null,
+                    'sent_at'       => null,
+                    'updated_at'    => now(),
+                ]);
+
+            $campaign->update([
+                'status'        => 'processing',
+                'sent_emails'   => $alreadySent,
+                'failed_emails' => 0,
+            ]);
+        } else {
+            // Full resend: no failures left — reset all contacts and start fresh
+            $campaign->emailLogs()->update([
+                'status'        => 'pending',
+                'error_message' => null,
+                'sent_at'       => null,
+                'updated_at'    => now(),
+            ]);
+
+            $campaign->update([
+                'status'        => 'processing',
+                'sent_emails'   => 0,
+                'failed_emails' => 0,
+            ]);
+        }
 
         ProcessCampaign::dispatch($campaign);
 
         return redirect()->route('user.campaigns.show', $campaign->id)
             ->with('success', 'Campaign sending queue has successfully started.');
+    }
+
+    /**
+     * Pause a processing campaign (stops dispatching new emails).
+     */
+    public function pause(Campaign $campaign)
+    {
+        $this->authorizeOwner($campaign);
+
+        if ($campaign->status !== 'processing') {
+            return redirect()->back()->with('error', 'Campaign is not currently running.');
+        }
+
+        $campaign->update(['status' => 'paused']);
+
+        return redirect()->route('user.campaigns.show', $campaign->id)
+            ->with('success', 'Campaign paused. Emails already in queue may still send; new ones will be skipped.');
+    }
+
+    /**
+     * Stop a processing or paused campaign completely.
+     */
+    public function stop(Campaign $campaign)
+    {
+        $this->authorizeOwner($campaign);
+
+        if (!in_array($campaign->status, ['processing', 'paused'])) {
+            return redirect()->back()->with('error', 'Campaign cannot be stopped in its current state.');
+        }
+
+        // Mark remaining pending logs as failed
+        $campaign->emailLogs()
+            ->where('status', 'pending')
+            ->update([
+                'status'        => 'failed',
+                'error_message' => 'Campaign stopped by user.',
+                'updated_at'    => now(),
+            ]);
+
+        $skippedCount = $campaign->emailLogs()->where('error_message', 'Campaign stopped by user.')->count();
+        $campaign->increment('failed_emails', $skippedCount);
+
+        $campaign->update(['status' => 'stopped']);
+
+        return redirect()->route('user.campaigns.show', $campaign->id)
+            ->with('success', 'Campaign has been stopped. Pending emails were cancelled.');
     }
 
     /**

@@ -48,6 +48,19 @@ class SendCampaignMailJob implements ShouldQueue
         }
 
         $campaign = $this->log->campaign;
+
+        // Respect pause/stop — don't send if campaign was paused or stopped
+        $campaign->refresh();
+        if (in_array($campaign->status, ['paused', 'stopped'])) {
+            // Mark this pending log as failed/cancelled
+            $this->log->update([
+                'status'        => 'failed',
+                'error_message' => 'Campaign ' . $campaign->status . ' by user.',
+            ]);
+            $campaign->increment('failed_emails');
+            $this->checkCampaignCompletion($campaign);
+            return;
+        }
         
         // Find SMTP credentials:
         // Try campaign's SMTP settings. If none linked, find the active default SMTP settings for the user who owns the campaign
@@ -98,7 +111,13 @@ class SendCampaignMailJob implements ShouldQueue
             $resumeFullPath = null;
             $tempDownloadPath = null;
             if ($campaign->resume_path) {
-                $resumeFullPath = \Illuminate\Support\Facades\Storage::disk('local')->path($campaign->resume_path);
+                // Use the Storage facade so Storage::fake() is respected in tests
+                $disk = \Illuminate\Support\Facades\Storage::disk('local');
+                if ($disk->exists($campaign->resume_path)) {
+                    $resumeFullPath = $disk->path($campaign->resume_path);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning("Resume file not found: {$campaign->resume_path}");
+                }
             } elseif ($campaign->resume_link) {
                 $tempDownloadPath = $this->downloadResumeFromLink($campaign->resume_link, $campaign->id);
                 if ($tempDownloadPath) {

@@ -29,7 +29,7 @@ class ProcessCampaign implements ShouldQueue
     {
         $this->campaign->refresh();
 
-        if ($this->campaign->status === 'completed' || $this->campaign->status === 'failed') {
+        if (in_array($this->campaign->status, ['completed', 'failed', 'stopped', 'paused'])) {
             return;
         }
 

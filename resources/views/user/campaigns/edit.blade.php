@@ -168,6 +168,83 @@
                 </div>
             </div>
 
+            <!-- Attachment Modal Picker -->
+            <div id="resume-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
+                <div class="relative bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="resume-modal-card">
+                    <!-- Header -->
+                    <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                            </svg>
+                            <span>Attach Resume</span>
+                        </h3>
+                        <button type="button" onclick="closeAttachmentPicker()" class="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-100 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Content Options -->
+                    <div class="p-6 space-y-4">
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btn-choice-local" onclick="selectChoice('local')" class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-center gap-1.5 transition-all">
+                                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span class="text-[11px] font-semibold text-slate-700">Attach Local</span>
+                                </button>
+                                <button type="button" id="btn-choice-link" onclick="selectChoice('link')" class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-center gap-1.5 transition-all">
+                                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                    <span class="text-[11px] font-semibold text-slate-700">Select from Drive</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Upload File Input container -->
+                        <div id="modal-local-input" class="hidden space-y-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase font-mono">Upload New Resume (PDF/DOC/DOCX)</label>
+                            <div class="relative border border-dashed border-slate-300 rounded-xl hover:border-emerald-500 transition-colors p-5 bg-slate-50 text-center cursor-pointer">
+                                <input type="file" name="resume_file" id="resume_file" accept=".pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleModalFileSelect()">
+                                <div class="space-y-1">
+                                    <svg class="mx-auto h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <p class="text-xs font-semibold text-slate-600" id="modal-file-text">Click to choose file</p>
+                                    <p class="text-[10px] text-slate-400">PDF, DOC, DOCX. Max: 5MB</p>
+                                </div>
+                            </div>
+                            @if($campaign->resume_path)
+                                <p id="saved-resume-name" class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Currently saved: {{ basename($campaign->resume_path) }} (Will keep if blank)</span>
+                                </p>
+                            @endif
+                        </div>
+
+                        <!-- Web Link Input container -->
+                        <div id="modal-link-input" class="hidden space-y-2">
+                            <label for="modal_resume_link" class="block text-xs font-bold text-slate-400 uppercase font-mono">Resume Drive Link</label>
+                            <input type="url" id="modal_resume_link" class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                                placeholder="https://drive.google.com/file/d/.../view">
+                            <p class="text-[10px] text-slate-400">Please make sure link sharing is set to "Anyone with the link can view".</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer actions -->
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                        <button type="button" onclick="closeAttachmentPicker()" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-100 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" onclick="applyAttachment()" class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-500 transition-colors shadow-md shadow-emerald-600/10">
+                            Attach
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Page Actions -->
             <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
                 <a href="{{ route('user.campaigns.show', $campaign->id) }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors border border-slate-200">
@@ -178,83 +255,6 @@
                 </button>
             </div>
         </form>
-    </div>
-</div>
-
-<!-- Attachment Modal Picker -->
-<div id="resume-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
-    <div class="relative bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="resume-modal-card">
-        <!-- Header -->
-        <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                </svg>
-                <span>Attach Resume</span>
-            </h3>
-            <button type="button" onclick="closeAttachmentPicker()" class="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-100 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Content Options -->
-        <div class="p-6 space-y-4">
-            <div class="space-y-3">
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" id="btn-choice-local" onclick="selectChoice('local')" class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-center gap-1.5 transition-all">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <span class="text-[11px] font-semibold text-slate-700">Attach Local</span>
-                    </button>
-                    <button type="button" id="btn-choice-link" onclick="selectChoice('link')" class="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-center gap-1.5 transition-all">
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                        <span class="text-[11px] font-semibold text-slate-700">Select from Drive</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Upload File Input container -->
-            <div id="modal-local-input" class="hidden space-y-2">
-                <label class="block text-xs font-bold text-slate-400 uppercase font-mono">Upload New Resume (PDF/DOC/DOCX)</label>
-                <div class="relative border border-dashed border-slate-300 rounded-xl hover:border-emerald-500 transition-colors p-5 bg-slate-50 text-center cursor-pointer">
-                    <input type="file" name="resume_file" id="resume_file" accept=".pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleModalFileSelect()">
-                    <div class="space-y-1">
-                        <svg class="mx-auto h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <p class="text-xs font-semibold text-slate-600" id="modal-file-text">Click to choose file</p>
-                        <p class="text-[10px] text-slate-400">PDF, DOC, DOCX. Max: 5MB</p>
-                    </div>
-                </div>
-                @if($campaign->resume_path)
-                    <p id="saved-resume-name" class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>Currently saved: {{ basename($campaign->resume_path) }} (Will keep if blank)</span>
-                    </p>
-                @endif
-            </div>
-
-            <!-- Web Link Input container -->
-            <div id="modal-link-input" class="hidden space-y-2">
-                <label for="modal_resume_link" class="block text-xs font-bold text-slate-400 uppercase font-mono">Resume Drive Link</label>
-                <input type="url" id="modal_resume_link" class="block w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-                    placeholder="https://drive.google.com/file/d/.../view">
-                <p class="text-[10px] text-slate-400">Please make sure link sharing is set to "Anyone with the link can view".</p>
-            </div>
-        </div>
-
-        <!-- Footer actions -->
-        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
-            <button type="button" onclick="closeAttachmentPicker()" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-100 transition-colors">
-                Cancel
-            </button>
-            <button type="button" onclick="applyAttachment()" class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-500 transition-colors shadow-md shadow-emerald-600/10">
-                Attach
-            </button>
-        </div>
     </div>
 </div>
 
@@ -388,7 +388,50 @@
         updateAttachmentPills();
     }
 
-    // Initialise pill state on page load
-    updateAttachmentPills();
+    // Initialise pill state on page load using server-rendered values
+    (function initAttachmentPill() {
+        const choice = document.getElementById('resume_choice').value;
+        const area   = document.getElementById('attachment-area');
+        area.innerHTML = '';
+
+        if (!choice || choice === 'none') {
+            area.classList.add('hidden');
+            return;
+        }
+
+        area.classList.remove('hidden');
+
+        if (choice === 'local') {
+            @if($campaign->resume_path)
+                const savedName = "{{ basename($campaign->resume_path) }}";
+            @else
+                const savedName = 'Attached Resume Document';
+            @endif
+            area.innerHTML = `<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-lg border border-rose-200 shadow-sm">
+                <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span class="max-w-[250px] truncate">${savedName}</span>
+                <span class="text-[10px] text-rose-400 font-normal">(saved — upload new to replace)</span>
+                <button type="button" onclick="removeAttachment()" class="text-rose-400 hover:text-rose-600 font-bold ml-1 text-sm font-mono">&times;</button>
+            </div>`;
+
+        } else if (choice === 'link') {
+            @if($campaign->resume_link)
+                const savedLink = "{{ $campaign->resume_link }}";
+            @else
+                const savedLink = '';
+            @endif
+            // Pre-fill the modal link input so it shows when reopened
+            const modalLinkEl = document.getElementById('modal_resume_link');
+            if (modalLinkEl && savedLink) modalLinkEl.value = savedLink;
+
+            const displayLink = savedLink || 'Google Drive Resume Link';
+            area.innerHTML = `<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 shadow-sm">
+                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                <span class="max-w-[250px] truncate">${displayLink}</span>
+                <button type="button" onclick="removeAttachment()" class="text-blue-400 hover:text-blue-600 font-bold ml-1 text-sm font-mono">&times;</button>
+            </div>`;
+        }
+    })();
+
 </script>
 @endsection
